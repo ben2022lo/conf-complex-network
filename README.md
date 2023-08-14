@@ -1,8 +1,12 @@
 # conf-complex-network
 
 ## implementation
+### V0
 The V0 consist our first algorithm which is not pertinet for the structure of simplificial complex.
-The V1, based on V0's core algorithm, would call for lead-lag transformation and construct valid simplificial complex.
+
+### V1
+The V1 uses augmented signatures to create 1-simplices. 
+For 2-simplex, we applied lasso regression to find relations between signatures of lead-lag transformation of 1 time series and signatures of couples of time series. We use the package "simplicial" to stock and analysis complex.
 
 ## dataset 
 We have used the daily prices of 119 NYSE stocks for the period spanning from 1999-12-31 to 2021-06-17.
