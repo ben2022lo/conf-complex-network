@@ -1,5 +1,5 @@
 {
-    "dataset" : "finance", 
+    "dataset" : "fMRI", 
     "win" : 30,  
     "alpha_1d" : 1000,  
     "alpha_2d" : 1000    
