@@ -4,7 +4,7 @@ import torch
 from itertools import combinations
 from sklearn.linear_model import Lasso
 from simplicial import*
-
+import matplotlib.pyplot as plt
 
 class SigComplex:
     def __init__(self, MultiTS, win, alpha_1d = 1000, alpha_2d = 1000):
@@ -16,7 +16,8 @@ class SigComplex:
         self.alpha_2d = alpha_2d
         self.complexT = [None] * MultiTS.shape[-2] # list to stock simplicial complex 
         self.hyper_coherenceT = [None] * MultiTS.shape[-2] # list to stock hyper coherence
-        self.life_duration = {}
+        self.life_duration1 = {} # life duration of 1-simplices
+        self.life_duration2 = {} # life duration of 2-simplices
         
     def leadlag(self, X):
         '''
@@ -157,9 +158,10 @@ class SigComplex:
             for j in range(i + 1, adj_mat_1d.shape[1]):  # Only add edges once (above the main diagonal)
                 if adj_mat_1d[i,j] != 0 or adj_mat_1d[j,i] != 0:
                     # when two 0-simplices are predictor of each other, the weight become the sum of their coefficients
-                    _ = c.addSimplex(fs = [str(i),str(j)], 
+                    id1 = c.addSimplex(fs = [str(i),str(j)], 
                                  id=str(i) + '-' + str(j), 
                                  attr=dict(weight=adj_mat_1d[i,j]+adj_mat_1d[j,i]))
+                    self.life_duration1[id1] = self.life_duration1[id1] + 1 if id1 in self.life_duration1 else 1
                     print("add ",str(i) + '-' + str(j))
         print("Epoch : ",t," 1-simplex")
         # adjance matrix between 0-simplice and 1-simplices
@@ -173,12 +175,12 @@ class SigComplex:
                     try:
                         name = [i,k_uplets[j][0],k_uplets[j][1]]
                         name.sort()
-                        id1 =  str(name[0]) + '-' + str(name[1]) + '-' + str(name[2]) 
+                        id2 =  str(name[0]) + '-' + str(name[1]) + '-' + str(name[2]) 
                         _, completed = c.addSimplexWithBasis(bs = [str(i),str(k_uplets[j][0]),str(k_uplets[j][1])], 
-                                     id = id1,
+                                     id = id2,
                                      attr=dict(weight= adj_mat_2d[i,j]))                    
-                        self.life_duration[id1] = self.life_duration[id1] + 1 if id1 in self.life_duration else 1
-                        print('add ', id1)
+                        self.life_duration2[id2] = self.life_duration2[id2] + 1 if id2 in self.life_duration2 else 1
+                        print('add ', id2)
                         if completed:
                             count_without += 1
                             
@@ -190,7 +192,7 @@ class SigComplex:
                         c[simplex_id]["weight"] = c[simplex_id]["weight"] + adj_mat_2d[i,j]                 
                     
         print("Epoch : ",t," 2d-simplex")
-        hyper_coherence = count_without/count_with
+        hyper_coherence = count_without/count_with if count_with != 0 else "no 2-simplex has all needed 1-simplex"
         return c, hyper_coherence
     
     def complex_along_T(self,a,b):
@@ -201,34 +203,21 @@ class SigComplex:
         for t in range(a,b): 
             self.complexT[t], self.hyper_coherenceT[t] = self.complex_creation(t)
             
+    def life_duration_analyse(self):
+        plt.hist(self.life_duration1.values())
+        plt.title("1-simplices duration distribution")
+        plt.show()
+        print("The 10 most persistent 1-simplices")
+        print(sorted(self.life_duration1.items(), key=lambda x:x[1], reverse=True)[0:10])
+        plt.hist(self.life_duration2.values())
+        plt.title("2-simplices duration distribution")
+        plt.show()
+        print("The 10 most persistent 2-simplices")
+        print(sorted(self.life_duration2.items(), key=lambda x:x[1], reverse=True)[0:10])
     
-    def order_violation(self, list_t):
-        '''
-        This method study the coherence level of simplicial complex by looking at if 2-simplices
-        found by lasso have already necessary lower order simplices 
+    def hyper_coherence_analyse(self, a, b):
+        print(self.hyper_coherenceT[a:b])
         
-        Parameters
-        ----------
-        list_t : list
-            indices of complex to be considered.
-
-        Returns
-        -------
-        prop_violations : list
-            list of violations proportions : 
-                number of 1-simplices added / total number of 1-simplices to create 2-simplices
-
-        '''
-        prop_violations = []
-        for t in list_t:
-            complex_t = self.complexT[t]
-            count = 0
-            for i in complex_t.simplices():
-                if "d" in i:
-                    count += 1
-            prop_violations.append(count/(complex_t.numberOfSimplicesOfOrder()[2]*3))
-        return prop_violations
-    
     def layout(self, list_t):
         '''
         This method try to visualize complex, the Embedding class need to be overrided
