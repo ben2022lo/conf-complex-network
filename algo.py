@@ -246,7 +246,3 @@ class SigComplex:
         for t in list_t:          
             em = Embedding(self.complexT[t], dim=2)
             drawing.draw_complex(self.complexT[t], em, ax=None, color=None, color_simplex=None, node_size=0.02)
-
-
-dd = {}
-dd["a"] =  dd["a"] + 1 if "a" in dd else 1
