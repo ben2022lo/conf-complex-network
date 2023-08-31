@@ -14,8 +14,10 @@ class SigComplex:
         self.D = MultiTS.shape[-1]
         self.alpha_1d = alpha_1d
         self.alpha_2d = alpha_2d
-        self.complexT = [] # list to stock simplicial complex 
-    
+        self.complexT = [None] * MultiTS.shape[-2] # list to stock simplicial complex 
+        self.hyper_coherenceT = [None] * MultiTS.shape[-2] # list to stock hyper coherence
+        self.life_duration = {}
+        
     def leadlag(self, X):
         '''
         lead-lag transformation of one dimensional TS [T,1] -> [2T-1, 2] 
@@ -163,29 +165,42 @@ class SigComplex:
         # adjance matrix between 0-simplice and 1-simplices
         adj_mat_2d, k_uplets = self.simplex_2d(t)
         # Add 2-simplex with weight
+        count_without = 0 # hyper coherence : 2-simplex without 3 1-simplices
+        count_with = 0 # hyper coherence : 2-simplex with 3 1-simplices
         for i in range(adj_mat_2d.shape[0]):
             for j in range(adj_mat_2d.shape[1]):
                 if adj_mat_2d[i,j] != 0:
                     try:
-                        _ = c.addSimplexWithBasis(bs = [str(i),str(k_uplets[j][0]),str(k_uplets[j][1])], 
-                                     id = str(i) + '-' + str(k_uplets[j][0]) + '-' + str(k_uplets[j][1]),
-                                     attr=dict(weight= adj_mat_2d[i,j]))
-                        print('add ', str(i) + '-' + str(k_uplets[j][0]) + '-' + str(k_uplets[j][1]))
+                        name = [i,k_uplets[j][0],k_uplets[j][1]]
+                        name.sort()
+                        id1 =  str(name[0]) + '-' + str(name[1]) + '-' + str(name[2]) 
+                        _, completed = c.addSimplexWithBasis(bs = [str(i),str(k_uplets[j][0]),str(k_uplets[j][1])], 
+                                     id = id1,
+                                     attr=dict(weight= adj_mat_2d[i,j]))                    
+                        self.life_duration[id1] = self.life_duration[id1] + 1 if id1 in self.life_duration else 1
+                        print('add ', id1)
+                        if completed:
+                            count_without += 1
+                            
+                        else :
+                            count_with += 1                           
                     # when same basis (0-simlex) are found, all coeffients are added to the weight
                     except:
                         simplex_id = c.simplexWithBasis(bs=[str(i),str(k_uplets[j][0]),str(k_uplets[j][1])])
                         c[simplex_id]["weight"] = c[simplex_id]["weight"] + adj_mat_2d[i,j]                 
+                    
         print("Epoch : ",t," 2d-simplex")
-        return c   
+        hyper_coherence = count_without/count_with
+        return c, hyper_coherence
     
-    def complex_along_T(self):
+    def complex_along_T(self,a,b):
         '''
-        This method generate complex for all T-win
+        This method generate complex for a given period
 
         '''
-        for t in range(1): #self.T-self.win
-            self.complexT.append(self.complex_creation(t))
-       
+        for t in range(a,b): 
+            self.complexT[t], self.hyper_coherenceT[t] = self.complex_creation(t)
+            
     
     def order_violation(self, list_t):
         '''
@@ -233,6 +248,5 @@ class SigComplex:
             drawing.draw_complex(self.complexT[t], em, ax=None, color=None, color_simplex=None, node_size=0.02)
 
 
-
-
-
+dd = {}
+dd["a"] =  dd["a"] + 1 if "a" in dd else 1

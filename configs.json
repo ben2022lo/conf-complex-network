@@ -1,6 +1,6 @@
 {
-    "dataset" : "fMRI", 
+    "dataset" : "SOS", 
     "win" : 30,  
     "alpha_1d" : 1000,  
-    "alpha_2d" : 1000    
+    "alpha_2d" : 5000
 }

@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from scipy import io
 from os import listdir
-#import numpy as np
+import numpy as np
 
 def load_MultiTS(dataset):
     if dataset == "finance":
@@ -22,6 +22,28 @@ def load_MultiTS(dataset):
             MultiTS = array_data.reshape((1, *array_data.shape))
             l_MultiTS.append(torch.tensor(MultiTS))
         return l_MultiTS
+    
+    if dataset == "SOS":
+        df = pd.read_csv("E:/M1/Alternance/Projet SOS/algos/data.csv")
+        # add conlumn date
+        date_format = '%d/%m/%Y %H:%M:%S'
+        df['date'] =  pd.to_datetime(df['DATE_ENTREE_VISITE'], format=date_format).dt.date
+        call_volume_by_date = df.groupby('date').count()['id']
+        # counts of top 15 motifs
+        top_motifs = ["VOMIT","FIEVRE","TOUX","DIARRHEE","RHINO","DL GORGE","MIGRAINE","NAUSEE","DL ABDO","DL ESTOMAC","VERTIGES","CEPHALEE"]
+        melted = pd.melt(df, id_vars=['date'], value_vars=['MOTIF1', 'MOTIF2', 'MOTIF3'], var_name='Motif')
+        motif_counts_date = melted.groupby(['date','value'])['value'].count().reset_index(name='count')
+        lst_m = []
+        for motif in top_motifs:
+            serie = motif_counts_date.loc[(motif_counts_date['value']==motif)]['count'].rename(motif)
+            serie.index = call_volume_by_date.index
+            lst_m.append(serie)
+        # dataset by date
+        df_date = pd.concat(lst_m, axis=1)
+        array_data = df_date.values
+        reshaped_array = array_data.reshape((1, *array_data.shape))
+        MultiTS = torch.tensor(reshaped_array).float()
+        return MultiTS
     # too many missing values
     #if dataset == "epidemie":
     #    disease_dic = {}
@@ -35,9 +57,10 @@ def load_MultiTS(dataset):
     #        print(disease_dic[name])
     #        disease_dic[name].replace('-', np.nan, inplace=True)
     #        print(disease_dic[name].isna().mean())
-    
+
     raise ValueError("Unsupported dataset: " + dataset)
    
+
 
 
 
