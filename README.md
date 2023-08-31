@@ -22,5 +22,6 @@ The 1-simplex and 2-simplex are coherent for financial dataset, which confirms s
 For a non public medical dataset, we found a small fraction of 2-simplex that persist. 
 We try to confirm our method by known interactions of cortex. The most persistent 1-simplex correspond to a well-known interation within the 15 cortex tested.
 Here are the life duration distribution :
-![cerveau1](conf-complex-network/cerveau_distribution1.png)
+![cerveau1](cerveau_distribution1.png)
 
+![cerveau2](cerveau_distribution2.png)
