@@ -19,5 +19,7 @@ For analysis of simplicial complex, we add the hyper coherence (Santoro, Andrea,
 
 ## result
 The 1-simplex and 2-simplex are coherent for financial dataset, which confirms signature features
-No 2-simplex are found for fMRI dataset. The 1-simplex found should be compared to confirmed cortical interactions. We try to confirm our method by known interactions of cortex.
-For a non public medical dataset, we found a small fraction of 2-simplex persist. 
+For a non public medical dataset, we found a small fraction of 2-simplex that persist. 
+We try to confirm our method by known interactions of cortex. The most persistent 1-simplex correspond to a well-known interation within the 15 cortex tested.
+Here are the life duration distribution :
+
